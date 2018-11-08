@@ -30,7 +30,7 @@
             <line x1="46" x2="46" y1="8" y2="50" />
             <line x1="154" x2="154" y1="8" y2="50" />
             <line x1="13" x2="187" y1="70" y2="70" />
-            <text x="50%" y="135" font-size="90" stroke-width="1" text-anchor="middle" dominant-baseline="middle">{{new Date().getDate()}}</text>
+            <text x="50%" y="135" font-size="90" stroke-width="1" text-anchor="middle" dominant-baseline="middle">{{currentDay}}</text>
           </svg>
         </slot>
       </span>
@@ -105,7 +105,7 @@
 </template>
 
 <script>
-import fecha from 'fecha'
+import { DateTime } from 'luxon'
 import clickoutside from '@/directives/clickoutside'
 import { isValidDate, isValidRange, isDateObejct, isPlainObject, formatDate, parseDate, throttle } from '@/utils/index'
 import CalendarPanel from './calendar.vue'
@@ -113,7 +113,6 @@ import locale from '@/mixins/locale'
 import Languages from '@/locale/languages'
 
 export default {
-  fecha,
   name: 'DatePicker',
   components: { CalendarPanel },
   mixins: [locale],
@@ -128,7 +127,7 @@ export default {
     },
     lang: {
       type: [String, Object],
-      default: 'zh'
+      default: 'en'
     },
     format: {
       type: String,
@@ -215,6 +214,9 @@ export default {
     }
   },
   computed: {
+    currentDay() {
+      return DateTime.utc().day
+    },
     language () {
       if (isPlainObject(this.lang)) {
         return { ...Languages.en, ...this.lang }

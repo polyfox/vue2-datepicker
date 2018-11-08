@@ -1,4 +1,4 @@
-import fecha from 'fecha'
+import { DateTime } from 'luxon'
 
 export function isPlainObject (obj) {
   return Object.prototype.toString.call(obj) === '[object Object]'
@@ -12,17 +12,16 @@ export function isValidDate (date) {
   if (date === null || date === undefined) {
     return false
   }
-  return !isNaN(new Date(date).getTime())
+  // TODO: check that the date is actually valid
+  return true
 }
 
 export function isValidRange (date) {
-  return (
-    Array.isArray(date) &&
+  return Array.isArray(date) &&
     date.length === 2 &&
     isValidDate(date[0]) &&
     isValidDate(date[1]) &&
-    (new Date(date[1]).getTime() >= new Date(date[0]).getTime())
-  )
+    (date[1] >= date[0])
 }
 
 export function parseTime (time) {
@@ -56,7 +55,7 @@ export function formatTime (time, type = '24', a = 'a') {
 
 export function formatDate (date, format) {
   try {
-    return fecha.format(new Date(date), format)
+    return date.toFormat(format)
   } catch (e) {
     return ''
   }

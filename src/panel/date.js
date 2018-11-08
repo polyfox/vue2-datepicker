@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import locale from '@/mixins/locale'
 import { formatDate } from '@/utils/index'
 
@@ -13,10 +14,10 @@ export default {
       default: 'YYYY-MM-DD'
     },
     calendarMonth: {
-      default: new Date().getMonth()
+      default: DateTime.utc().month,
     },
     calendarYear: {
-      default: new Date().getFullYear()
+      default: DateTime.utc().year,
     },
     firstDayOfWeek: {
       default: 7,
@@ -32,7 +33,7 @@ export default {
   },
   methods: {
     selectDate ({ year, month, day }) {
-      const date = new Date(year, month, day)
+      const date = DateTime.utc(year, month, day)
       if (this.disabledDate(date)) {
         return
       }
@@ -45,22 +46,22 @@ export default {
     },
     getDates (year, month, firstDayOfWeek) {
       const arr = []
-      const time = new Date(year, month)
+      const time = DateTime.utc(year, month)
 
-      time.setDate(0) // 把时间切换到上个月最后一天
-      const lastMonthLength = (time.getDay() + 7 - firstDayOfWeek) % 7 + 1 // time.getDay() 0是星期天, 1是星期一 ...
-      const lastMonthfirst = time.getDate() - (lastMonthLength - 1)
+      time.set({ day: 1 }) // 把时间切换到上个月最后一天
+      const lastMonthLength = (time.weekday + 7 - firstDayOfWeek) % 7 + 1 // time.weekday 0是星期天, 1是星期一 ...
+      const lastMonthfirst = time.day - (lastMonthLength - 1)
       for (let i = 0; i < lastMonthLength; i++) {
         arr.push({ year, month: month - 1, day: lastMonthfirst + i })
       }
 
-      time.setMonth(time.getMonth() + 2, 0) // 切换到这个月最后一天
-      const curMonthLength = time.getDate()
+      time.set({ month: time.month + 2, day: 1 }) // 切换到这个月最后一天
+      const curMonthLength = time.day
       for (let i = 0; i < curMonthLength; i++) {
         arr.push({ year, month, day: 1 + i })
       }
 
-      time.setMonth(time.getMonth() + 1, 1) // 切换到下个月第一天
+      time.set({ month: time.month + 1, day: 1 }) // 切换到下个月第一天
       const nextMonthLength = 42 - (lastMonthLength + curMonthLength)
       for (let i = 0; i < nextMonthLength; i++) {
         arr.push({ year, month: month + 1, day: 1 + i })
@@ -70,11 +71,11 @@ export default {
     },
     getCellClasses ({ year, month, day }) {
       const classes = []
-      const cellTime = new Date(year, month, day).getTime()
-      const today = new Date().setHours(0, 0, 0, 0)
-      const curTime = this.value && new Date(this.value).setHours(0, 0, 0, 0)
-      const startTime = this.startAt && new Date(this.startAt).setHours(0, 0, 0, 0)
-      const endTime = this.endAt && new Date(this.endAt).setHours(0, 0, 0, 0)
+      const cellTime = DateTime.utc(year, month, day)
+      const today = DateTime.utc().set({hour: 0, minute: 0, second: 0, millisecond: 0})
+      const curTime = this.value && this.value.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+      const startTime = this.startAt && this.startAt.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+      const endTime = this.endAt && this.endAt.set({hour: 0, minute: 0, second: 0, millisecond: 0})
 
       if (month < this.calendarMonth) {
         classes.push('last-month')
@@ -104,7 +105,7 @@ export default {
       return classes
     },
     getCellTitle ({ year, month, day }) {
-      return formatDate(new Date(year, month, day), this.dateFormat)
+      return formatDate(DateTime.utc(year, month, day), this.dateFormat)
     }
   },
   render (h) {

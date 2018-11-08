@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import locale from '@/mixins/locale'
 
 export default {
@@ -6,9 +7,9 @@ export default {
   props: {
     value: null,
     calendarYear: {
-      default: new Date().getFullYear()
+      default: DateTime.utc().year,
     },
-    disabledMonth: Function
+    disabledMonth: Function,
   },
   methods: {
     isDisabled (month) {
@@ -26,8 +27,8 @@ export default {
   },
   render (h) {
     let months = this.t('months')
-    const currentYear = this.value && new Date(this.value).getFullYear()
-    const currentMonth = this.value && new Date(this.value).getMonth()
+    const currentYear = this.value && DateTime.utc().year
+    const currentMonth = this.value && DateTime.utc().month
     months = months.map((v, i) => {
       return <span
         class={{

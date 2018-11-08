@@ -71,6 +71,7 @@
 </template>
 
 <script>
+import { DateTime } from 'luxon'
 import { isValidDate, isDateObejct, formatDate } from '@/utils/index'
 import locale from '@/mixins/locale'
 import emitter from '@/mixins/emitter'
@@ -142,9 +143,9 @@ export default {
     }
   },
   data () {
-    const now = new Date()
-    const calendarYear = now.getFullYear()
-    const calendarMonth = now.getMonth()
+    const now = DateTime.utc()
+    const calendarYear = now.year
+    const calendarMonth = now.month
     const firstYear = Math.floor(calendarYear / 10) * 10
     return {
       panel: 'NONE',
@@ -157,12 +158,11 @@ export default {
   computed: {
     now: {
       get () {
-        return new Date(this.calendarYear, this.calendarMonth).getTime()
+        return DateTime.utc(this.calendarYear, this.calendarMonth)
       },
       set (val) {
-        const now = new Date(val)
-        this.calendarYear = now.getFullYear()
-        this.calendarMonth = now.getMonth()
+        this.calendarYear = val.year
+        this.calendarMonth = val.month
       }
     },
     timeType () {
@@ -236,26 +236,24 @@ export default {
     },
     // 根据value更新日历
     updateNow (value) {
-      const now = value ? new Date(value) : new Date()
-      const oldNow = new Date(this.now)
-      this.now = now
+      const oldNow = this.now
+      this.now = value
       if (this.visible) {
-        this.dispatch('DatePicker', 'calendar-change', [now, oldNow])
+        this.dispatch('DatePicker', 'calendar-change', [this.now, oldNow])
       }
     },
     getCriticalTime (value) {
       if (!value) {
         return null
       }
-      const date = new Date(value)
       if (this.type === 'year') {
-        return new Date(date.getFullYear(), 0).getTime()
+        return DateTime.utc(value.year, 0)
       } else if (this.type === 'month') {
-        return new Date(date.getFullYear(), date.getMonth()).getTime()
+        return DateTime.utc(value.year, value.month)
       } else if (this.type === 'date') {
-        return date.setHours(0, 0, 0, 0)
+        return value.set({hour: 0, minute: 0, second: 0, millisecond: 0})
       }
-      return date.getTime()
+      return value
     },
     inBefore (time, startAt) {
       startAt = startAt || this.startAt
@@ -271,46 +269,43 @@ export default {
       if (Array.isArray(this.disabledDays)) {
         return this.disabledDays.some(v => this.getCriticalTime(v) === time)
       } else if (typeof this.disabledDays === 'function') {
-        return this.disabledDays(new Date(time))
+        return this.disabledDays(time)
       }
       return false
     },
     isDisabledYear (year) {
-      const time = new Date(year, 0).getTime()
-      const maxTime = new Date(year + 1, 0).getTime() - 1
+      const time = DateTime.utc(year, 0)
+      const maxTime = DateTime.utc(year + 1, 0).minus({second: 1})
       return this.inBefore(maxTime) || this.inAfter(time) || (this.type === 'year' && this.inDisabledDays(time))
     },
     isDisabledMonth (month) {
-      const time = new Date(this.calendarYear, month).getTime()
-      const maxTime = new Date(this.calendarYear, month + 1).getTime() - 1
+      const time = DateTime.utc(this.calendarYear, month)
+      const maxTime = DateTime.utc(this.calendarYear, month + 1).minute({second: 1})
       return this.inBefore(maxTime) || this.inAfter(time) || (this.type === 'month' && this.inDisabledDays(time))
     },
     isDisabledDate (date) {
-      const time = new Date(date).getTime()
-      const maxTime = new Date(date).setHours(23, 59, 59, 999)
+      const time = date
+      const maxTime = date.set({hour: 23, minute: 59, second: 59, millisecond: 999})
       return this.inBefore(maxTime) || this.inAfter(time) || this.inDisabledDays(time)
     },
     isDisabledTime (date, startAt, endAt) {
-      const time = new Date(date).getTime()
+      const time = date
       return this.inBefore(time, startAt) || this.inAfter(time, endAt) || this.inDisabledDays(time)
     },
     selectDate (date) {
       if (this.type === 'datetime') {
-        let time = new Date(date)
-        if (isDateObejct(this.value)) {
-          time.setHours(
-            this.value.getHours(),
-            this.value.getMinutes(),
-            this.value.getSeconds()
-          )
-        }
+        time.set({
+          hour: this.value.hour,
+          minute: this.value.minute,
+          second: this.value.second,
+        })
         if (this.isDisabledTime(time)) {
-          time.setHours(0, 0, 0, 0)
-          if (this.notBefore && time.getTime() < new Date(this.notBefore).getTime()) {
-            time = new Date(this.notBefore)
+          time.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+          if (this.notBefore && time < this.notBefore) {
+            time = this.notBefore
           }
-          if (this.startAt && time.getTime() < new Date(this.startAt).getTime()) {
-            time = new Date(this.startAt)
+          if (this.startAt && time < this.startAt) {
+            time = this.startAt
           }
         }
         this.selectTime(time)
@@ -322,14 +317,14 @@ export default {
     selectYear (year) {
       this.changeCalendarYear(year)
       if (this.type.toLowerCase() === 'year') {
-        return this.selectDate(new Date(this.now))
+        return this.selectDate(this.now)
       }
       this.showPanelMonth()
     },
     selectMonth (month) {
       this.changeCalendarMonth(month)
       if (this.type.toLowerCase() === 'month') {
-        return this.selectDate(new Date(this.now))
+        return this.selectDate(this.now)
       }
       this.showPanelDate()
     },
@@ -340,10 +335,10 @@ export default {
       this.$emit('select-time', time, true)
     },
     changeCalendarYear (year) {
-      this.updateNow(new Date(year, this.calendarMonth))
+      this.updateNow(DateTime.utc(year, this.calendarMonth))
     },
     changeCalendarMonth (month) {
-      this.updateNow(new Date(this.calendarYear, month))
+      this.updateNow(DateTime.utc(this.calendarYear, month))
     },
     getSibling () {
       const calendars = this.$parent.$children.filter(v => v.$options.name === this.$options.name)
@@ -358,7 +353,7 @@ export default {
         month,
         flag,
         vm: this,
-        sibling: this.getSibling()
+        sibling: this.getSibling(),
       })
     },
     handleIconYear (flag) {
@@ -371,7 +366,7 @@ export default {
           year,
           flag,
           vm: this,
-          sibling: this.getSibling()
+          sibling: this.getSibling(),
         })
       }
     },

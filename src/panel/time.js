@@ -25,13 +25,13 @@ export default {
   },
   computed: {
     currentHours () {
-      return this.value ? new Date(this.value).getHours() : 0
+      return this.value ? this.value.hour : 0
     },
     currentMinutes () {
-      return this.value ? new Date(this.value).getMinutes() : 0
+      return this.value ? this.value.minute : 0
     },
     currentSeconds () {
-      return this.value ? new Date(this.value).getSeconds() : 0
+      return this.value ? this.value.second : 0
     }
   },
   methods: {
@@ -42,13 +42,13 @@ export default {
       if (typeof this.disabledTime === 'function' && this.disabledTime(time)) {
         return
       }
-      this.$emit('select', new Date(time))
+      this.$emit('select', time)
     },
     pickTime (time) {
       if (typeof this.disabledTime === 'function' && this.disabledTime(time)) {
         return
       }
-      this.$emit('pick', new Date(time))
+      this.$emit('pick', time)
     },
     getTimeSelectOptions () {
       const result = []
@@ -82,10 +82,9 @@ export default {
       }
       return result
     }
-
   },
   render (h) {
-    const date = new Date(this.value)
+    const date = this.value
     const disabledTime = typeof this.disabledTime === 'function' && this.disabledTime
 
     let pickers = this.getTimeSelectOptions()
@@ -93,7 +92,7 @@ export default {
       pickers = pickers.map(picker => {
         const pickHours = picker.value.hours
         const pickMinutes = picker.value.minutes
-        const time = new Date(date).setHours(pickHours, pickMinutes, 0)
+        const time = date.set({hour: pickHours, minute: pickMinutes, second: 0})
         return (
           <li
             class={{
@@ -115,7 +114,7 @@ export default {
     }
 
     const hours = Array.apply(null, { length: 24 }).map((_, i) => {
-      const time = new Date(date).setHours(i)
+      const time = date.set({hour: i})
       return <li
         class={{
           'cell': true,
@@ -130,7 +129,7 @@ export default {
     const length = parseInt(60 / step)
     const minutes = Array.apply(null, { length }).map((_, i) => {
       const value = i * step
-      const time = new Date(date).setMinutes(value)
+      const time = date.set({minute: value})
       return <li
         class={{
           'cell': true,
@@ -142,7 +141,7 @@ export default {
     })
 
     const seconds = Array.apply(null, { length: 60 }).map((_, i) => {
-      const time = new Date(date).setSeconds(i)
+      const time = date.set({second: i})
       return <li
         class={{
           'cell': true,
