@@ -20,7 +20,7 @@
       <a
         v-show="panel === 'DATE'"
         class="mx-current-month"
-        @click="handleBtnMonth">{{months[calendarMonth]}}</a>
+        @click="handleBtnMonth">{{months[calendarMonth - 1]}}</a>
       <a
         v-show="panel === 'DATE' || panel === 'MONTH'"
         class="mx-current-year"
@@ -104,7 +104,7 @@ export default {
     },
     dateFormat: {
       type: String,
-      default: 'YYYY-MM-DD'
+      default: 'yyyy-MM-dd'
     },
     // below user set
     firstDayOfWeek: {
@@ -166,9 +166,9 @@ export default {
       }
     },
     timeType () {
-      const h = /h+/.test(this.$parent.format) ? '12' : '24'
-      const a = /A/.test(this.$parent.format) ? 'A' : 'a'
-      return [h, a]
+      const h = /h+/.test(this.$parent.format) ? '12' : '24';
+      const a = /A/.test(this.$parent.format) ? 'A' : 'a';
+      return [h, a];
     },
     timeHeader () {
       if (this.type === 'time') {
@@ -237,14 +237,14 @@ export default {
     // 根据value更新日历
     updateNow (value) {
       const oldNow = this.now
-      this.now = value
+      this.now = value || DateTime.utc()
       if (this.visible) {
         this.dispatch('DatePicker', 'calendar-change', [this.now, oldNow])
       }
     },
     getCriticalTime (value) {
       if (!value) {
-        return null
+        return null;
       }
       if (this.type === 'year') {
         return DateTime.utc(value.year, 0)
@@ -267,7 +267,7 @@ export default {
     },
     inDisabledDays (time) {
       if (Array.isArray(this.disabledDays)) {
-        return this.disabledDays.some(v => this.getCriticalTime(v) === time)
+        return this.disabledDays.some(v => this.getCriticalTime(v).hasSame(time, 'day'))
       } else if (typeof this.disabledDays === 'function') {
         return this.disabledDays(time)
       }
@@ -280,35 +280,37 @@ export default {
     },
     isDisabledMonth (month) {
       const time = DateTime.utc(this.calendarYear, month)
-      const maxTime = DateTime.utc(this.calendarYear, month + 1).minute({second: 1})
+      const maxTime = DateTime.utc(this.calendarYear, month + 1).minus({second: 1})
       return this.inBefore(maxTime) || this.inAfter(time) || (this.type === 'month' && this.inDisabledDays(time))
     },
     isDisabledDate (date) {
-      const time = date
       const maxTime = date.set({hour: 23, minute: 59, second: 59, millisecond: 999})
-      return this.inBefore(maxTime) || this.inAfter(time) || this.inDisabledDays(time)
+      return this.inBefore(maxTime) || this.inAfter(date) || this.inDisabledDays(date)
     },
     isDisabledTime (date, startAt, endAt) {
-      const time = date
-      return this.inBefore(time, startAt) || this.inAfter(time, endAt) || this.inDisabledDays(time)
+      return this.inBefore(date, startAt) ||
+        this.inAfter(date, endAt) ||
+        this.inDisabledDays(date)
     },
     selectDate (date) {
       if (this.type === 'datetime') {
-        time.set({
-          hour: this.value.hour,
-          minute: this.value.minute,
-          second: this.value.second,
-        })
-        if (this.isDisabledTime(time)) {
-          time.set({hour: 0, minute: 0, second: 0, millisecond: 0})
-          if (this.notBefore && time < this.notBefore) {
-            time = this.notBefore
+        if (isDateObejct(this.value)) {
+          date = date.set({
+            hour: this.value.hour,
+            minute: this.value.minute,
+            second: this.value.second,
+          })
+        }
+        if (this.isDisabledTime(date)) {
+          date = date.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+          if (this.notBefore && date < this.notBefore) {
+            date = this.notBefore
           }
-          if (this.startAt && time < this.startAt) {
-            time = this.startAt
+          if (this.startAt && date < this.startAt) {
+            date = this.startAt
           }
         }
-        this.selectTime(time)
+        this.selectTime(date)
         this.showPanelTime()
         return
       }

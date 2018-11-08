@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import Vue from 'vue'
 import DatePicker from '@/index'
 
@@ -7,17 +8,18 @@ new Vue({  // eslint-disable-line
   el: '#app',
   data () {
     return {
-      value1: new Date(),
+      DateTime,
+      value1: DateTime.utc(),
       value2: '',
-      value3: new Date(),
+      value3: DateTime.utc(),
       value4: '',
       value5: '',
       value6: '',
       value7: '',
       value8: '',
       value9: '',
-      value10: new Date(),
-      value11: new Date(),
+      value10: DateTime.utc(),
+      value11: DateTime.utc(),
       value12: ''
     }
   },
@@ -46,10 +48,10 @@ new Vue({  // eslint-disable-line
   },
   render (h) {
     const example1 = {
-      'base': '<date-picker v-model="value1" lang="en" :not-before="new Date()"></date-picker>',
+      'base': '<date-picker v-model="value1" lang="en" :not-before="DateTime.utc()"></date-picker>',
       'range': '<date-picker v-model="value2" range appendToBody></date-picker>',
-      'month': '<date-picker v-model="value10" lang="en" type="month" format="YYYY-MM"></date-picker>',
-      'year': '<date-picker v-model="value11" lang="en" type="year" format="YYYY"></date-picker>',
+      'month': '<date-picker v-model="value10" lang="en" type="month" format="yyyy-MM"></date-picker>',
+      'year': '<date-picker v-model="value11" lang="en" type="year" format="yyyy"></date-picker>',
       'time': '<date-picker v-model="value12" lang="en" type="time" format="HH:mm:ss" placeholder="Select Time"></date-picker>'
     }
     const example2 = {
@@ -58,14 +60,14 @@ new Vue({  // eslint-disable-line
           v-model="value3"
           lang="en"
           type="datetime"
-          format="[on] MM-DD-YYYY [at] HH:mm"></date-picker>`,
+          format="[on] MM-dd-yyyy [at] HH:mm"></date-picker>`,
       'datetime with time-picker-options': `
         <date-picker
           v-model="value4"
           lang="en"
           type="datetime"
           appendToBody
-          format="YYYY-MM-DD hh:mm:ss a"
+          format="yyyy-MM-dd hh:mm:ss a"
           :time-picker-options="{
             start: '00:00',
             step: '00:30',
@@ -76,7 +78,7 @@ new Vue({  // eslint-disable-line
           v-model="value9"
           lang="en"
           type="datetime"
-          format="YYYY-MM-DD hh:mm:ss a"
+          format="yyyy-MM-dd hh:mm:ss a"
           :minute-step="10"
           ></date-picker>`,
       'datetime range': `
@@ -85,13 +87,13 @@ new Vue({  // eslint-disable-line
           range
           type="datetime"
           lang="en"
-          format="YYYY-MM-DD HH:mm:ss"></date-picker>`
+          format="yyyy-MM-dd HH:mm:ss"></date-picker>`
     }
     const example3 = {
       'with confirm': `
         <date-picker
           v-model="value6"
-          format="YYYY-MM-DD"
+          format="yyyy-MM-dd"
           lang="en"
           confirm></date-picker>`,
       'datetime with confirm': `
@@ -99,14 +101,14 @@ new Vue({  // eslint-disable-line
           v-model="value7"
           type="datetime"
           lang="en"
-          format="YYYY-MM-DD hh:mm:ss"
+          format="yyyy-MM-dd hh:mm:ss"
           confirm></date-picker>`,
       'range width confirm': `
         <date-picker
           v-model="value8"
           range
           lang="en"
-          format="YYYY-MM-DD"
+          format="yyyy-MM-dd"
           confirm></date-picker>`
     }
     const arr = [
@@ -115,7 +117,7 @@ new Vue({  // eslint-disable-line
       },
       {
         exam: example2,
-        tips: 'if you use the datetime, you should set the format to "YYYY-MM-DD HH:mm:ss" which default is "YYY-MM-DD'
+        tips: 'if you use the datetime, you should set the format to "yyyy-MM-dd HH:mm:ss" which default is "YYY-MM-dd'
       },
       {
         exam: example3,

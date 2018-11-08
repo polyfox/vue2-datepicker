@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import { formatTime, parseTime } from '@/utils/index'
 
 export default {
@@ -84,7 +85,7 @@ export default {
     }
   },
   render (h) {
-    const date = this.value
+    const date = this.value || DateTime.utc().set({hour: 0, minute: 0, second: 0})
     const disabledTime = typeof this.disabledTime === 'function' && this.disabledTime
 
     let pickers = this.getTimeSelectOptions()

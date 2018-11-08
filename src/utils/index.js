@@ -13,7 +13,7 @@ export function isValidDate (date) {
     return false
   }
   // TODO: check that the date is actually valid
-  return true
+  return typeof date === 'object'
 }
 
 export function isValidRange (date) {
@@ -63,7 +63,7 @@ export function formatDate (date, format) {
 
 export function parseDate (value, format) {
   try {
-    return fecha.parse(value, format)
+    return DateTime.fromFormat(value, format)
   } catch (e) {
     return false
   }

@@ -7,9 +7,9 @@ export default {
   props: {
     value: null,
     calendarYear: {
-      default: DateTime.utc().year,
+      default: DateTime.utc().year
     },
-    disabledMonth: Function,
+    disabledMonth: Function
   },
   methods: {
     isDisabled (month) {
@@ -27,16 +27,17 @@ export default {
   },
   render (h) {
     let months = this.t('months')
-    const currentYear = this.value && DateTime.utc().year
-    const currentMonth = this.value && DateTime.utc().month
+    const currentYear = this.value && this.value.year
+    const currentMonth = this.value && this.value.month
     months = months.map((v, i) => {
+      const month = i + 1
       return <span
         class={{
           'cell': true,
-          'actived': currentYear === this.calendarYear && currentMonth === i,
-          'disabled': this.isDisabled(i)
+          'actived': currentYear === this.calendarYear && currentMonth === month,
+          'disabled': this.isDisabled(month)
         }}
-        onClick={this.selectMonth.bind(this, i)}>
+        onClick={this.selectMonth.bind(this, month)}>
         {v}
       </span>
     })

@@ -131,7 +131,7 @@ export default {
     },
     format: {
       type: String,
-      default: 'YYYY-MM-DD'
+      default: 'yyyy-MM-dd'
     },
     dateFormat: {
       type: String // format the time header and date tooltip
@@ -264,28 +264,28 @@ export default {
         {
           text: pickers[0],
           onClick (self) {
-            self.currentValue = [ new Date(), new Date(Date.now() + 3600 * 1000 * 24 * 7) ]
-            self.updateDate(true)
+            self.currentValue = [ DateTime.utc(), DateTime.utc().plus({day: 7}) ];
+            self.updateDate(true);
           }
         },
         {
           text: pickers[1],
           onClick (self) {
-            self.currentValue = [ new Date(), new Date(Date.now() + 3600 * 1000 * 24 * 30) ]
+            self.currentValue = [ DateTime.utc(), DateTime.utc().plus({day: 30}) ];
             self.updateDate(true)
           }
         },
         {
           text: pickers[2],
           onClick (self) {
-            self.currentValue = [ new Date(Date.now() - 3600 * 1000 * 24 * 7), new Date() ]
+            self.currentValue = [ DateTime.utc().minus({day: 7}), DateTime.utc() ]
             self.updateDate(true)
           }
         },
         {
           text: pickers[3],
           onClick (self) {
-            self.currentValue = [ new Date(Date.now() - 3600 * 1000 * 24 * 30), new Date() ]
+            self.currentValue = [ DateTime.utc().minus({day: 30}), DateTime.utc() ]
             self.updateDate(true)
           }
         }
@@ -294,12 +294,12 @@ export default {
     },
     innerDateFormat () {
       if (this.dateFormat) {
-        return this.dateFormat
+        return this.dateFormat;
       }
       if (this.innerType === 'date') {
-        return this.format
+        return this.format;
       }
-      return this.format.replace(/[Hh]+.*[msSaAZ]|\[.*?\]/g, '').trim() || 'YYYY-MM-DD'
+      return this.format.replace(/[Hh]+.*[msSaAZ]|\[.*?\]/g, '').trim() || 'yyyy-MM-dd';
     },
     innerPopupStyle () {
       return { ...this.position, ...this.popupStyle }
@@ -337,153 +337,155 @@ export default {
       return parseDate(value, format || this.format)
     },
     dateEqual (a, b) {
-      return isDateObejct(a) && isDateObejct(b) && a.getTime() === b.getTime()
+      return isDateObejct(a) && isDateObejct(b) && a.hasSame(b, 'day');
     },
     rangeEqual (a, b) {
-      return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((item, index) => this.dateEqual(item, b[index]))
+      return Array.isArray(a) && Array.isArray(b) &&
+        a.length === b.length &&
+        a.every((item, index) => this.dateEqual(item, b[index]));
     },
     selectRange (range) {
       if (typeof range.onClick === 'function') {
-        return range.onClick(this)
+        return range.onClick(this);
       }
-      this.currentValue = [ new Date(range.start), new Date(range.end) ]
-      this.updateDate(true)
+      this.currentValue = [ range.start, range.end ];
+      this.updateDate(true);
     },
     clearDate () {
-      const date = this.range ? [null, null] : null
-      this.currentValue = date
-      this.updateDate(true)
-      this.$emit('clear')
+      const date = this.range ? [null, null] : null;
+      this.currentValue = date;
+      this.updateDate(true);
+      this.$emit('clear');
     },
     confirmDate () {
-      const valid = this.range ? isValidRange(this.currentValue) : isValidDate(this.currentValue)
+      const valid = this.range ? isValidRange(this.currentValue) : isValidDate(this.currentValue);
       if (valid) {
-        this.updateDate(true)
+        this.updateDate(true);
       }
-      this.$emit('confirm', this.currentValue)
-      this.closePopup()
+      this.$emit('confirm', this.currentValue);
+      this.closePopup();
     },
     updateDate (confirm = false) {
       if ((this.confirm && !confirm) || this.disabled) {
-        return false
+        return false;
       }
-      const equal = this.range ? this.rangeEqual(this.value, this.currentValue) : this.dateEqual(this.value, this.currentValue)
+      const equal = this.range ? this.rangeEqual(this.value, this.currentValue) : this.dateEqual(this.value, this.currentValue);
       if (equal) {
-        return false
+        return false;
       }
-      this.$emit('input', this.currentValue)
-      this.$emit('change', this.currentValue)
-      return true
+      this.$emit('input', this.currentValue);
+      this.$emit('change', this.currentValue);
+      return true;
     },
     handleValueChange (value) {
       if (!this.range) {
-        this.currentValue = isValidDate(value) ? new Date(value) : null
+        this.currentValue = isValidDate(value) ? value : null;
       } else {
-        this.currentValue = isValidRange(value) ? [new Date(value[0]), new Date(value[1])] : [null, null]
+        this.currentValue = isValidRange(value) ? [value[0], value[1]] : [null, null];
       }
     },
     selectDate (date) {
-      this.currentValue = date
-      this.updateDate() && this.closePopup()
+      this.currentValue = date;
+      this.updateDate() && this.closePopup();
     },
     selectStartDate (date) {
-      this.$set(this.currentValue, 0, date)
+      this.$set(this.currentValue, 0, date);
       if (this.currentValue[1]) {
-        this.updateDate()
+        this.updateDate();
       }
     },
     selectEndDate (date) {
-      this.$set(this.currentValue, 1, date)
+      this.$set(this.currentValue, 1, date);
       if (this.currentValue[0]) {
-        this.updateDate()
+        this.updateDate();
       }
     },
     selectTime (time, close) {
-      this.currentValue = time
-      this.updateDate() && close && this.closePopup()
+      this.currentValue = time;
+      this.updateDate() && close && this.closePopup();
     },
     selectStartTime (time) {
-      this.selectStartDate(time)
+      this.selectStartDate(time);
     },
     selectEndTime (time) {
-      this.selectEndDate(time)
+      this.selectEndDate(time);
     },
     showPopup () {
       if (this.disabled) {
         return
       }
-      this.popupVisible = true
+      this.popupVisible = true;
     },
     closePopup () {
-      this.popupVisible = false
+      this.popupVisible = false;
     },
     getPopupSize (element) {
-      const originalDisplay = element.style.display
-      const originalVisibility = element.style.visibility
-      element.style.display = 'block'
-      element.style.visibility = 'hidden'
-      const styles = window.getComputedStyle(element)
-      const width = element.offsetWidth + parseInt(styles.marginLeft) + parseInt(styles.marginRight)
-      const height = element.offsetHeight + parseInt(styles.marginTop) + parseInt(styles.marginBottom)
-      const result = { width, height }
-      element.style.display = originalDisplay
-      element.style.visibility = originalVisibility
-      return result
+      const originalDisplay = element.style.display;
+      const originalVisibility = element.style.visibility;
+      element.style.display = 'block';
+      element.style.visibility = 'hidden';
+      const styles = window.getComputedStyle(element);
+      const width = element.offsetWidth + parseInt(styles.marginLeft) + parseInt(styles.marginRight);
+      const height = element.offsetHeight + parseInt(styles.marginTop) + parseInt(styles.marginBottom);
+      const result = { width, height };
+      element.style.display = originalDisplay;
+      element.style.visibility = originalVisibility;
+      return result;
     },
     displayPopup () {
-      const dw = document.documentElement.clientWidth
-      const dh = document.documentElement.clientHeight
-      const InputRect = this.$el.getBoundingClientRect()
-      const PopupRect = this._popupRect || (this._popupRect = this.getPopupSize(this.$refs.calendar))
-      const position = {}
-      let offsetRelativeToInputX = 0
-      let offsetRelativeToInputY = 0
+      const dw = document.documentElement.clientWidth;
+      const dh = document.documentElement.clientHeight;
+      const InputRect = this.$el.getBoundingClientRect();
+      const PopupRect = this._popupRect || (this._popupRect = this.getPopupSize(this.$refs.calendar));
+      const position = {};
+      let offsetRelativeToInputX = 0;
+      let offsetRelativeToInputY = 0;
       if (this.appendToBody) {
-        offsetRelativeToInputX = window.pageXOffset + InputRect.left
-        offsetRelativeToInputY = window.pageYOffset + InputRect.top
+        offsetRelativeToInputX = window.pageXOffset + InputRect.left;
+        offsetRelativeToInputY = window.pageYOffset + InputRect.top;
       }
       if (
         dw - InputRect.left < PopupRect.width &&
         InputRect.right < PopupRect.width
       ) {
-        position.left = offsetRelativeToInputX - InputRect.left + 1 + 'px'
+        position.left = offsetRelativeToInputX - InputRect.left + 1 + 'px';
       } else if (InputRect.left + InputRect.width / 2 <= dw / 2) {
-        position.left = offsetRelativeToInputX + 'px'
+        position.left = offsetRelativeToInputX + 'px';
       } else {
-        position.left = offsetRelativeToInputX + InputRect.width - PopupRect.width + 'px'
+        position.left = offsetRelativeToInputX + InputRect.width - PopupRect.width + 'px';
       }
       if (
         InputRect.top <= PopupRect.height &&
         dh - InputRect.bottom <= PopupRect.height
       ) {
-        position.top = offsetRelativeToInputY + dh - InputRect.top - PopupRect.height + 'px'
+        position.top = offsetRelativeToInputY + dh - InputRect.top - PopupRect.height + 'px';
       } else if (InputRect.top + InputRect.height / 2 <= dh / 2) {
-        position.top = offsetRelativeToInputY + InputRect.height + 'px'
+        position.top = offsetRelativeToInputY + InputRect.height + 'px';
       } else {
-        position.top = offsetRelativeToInputY - PopupRect.height + 'px'
+        position.top = offsetRelativeToInputY - PopupRect.height + 'px';
       }
       if (position.top !== this.position.top || position.left !== this.position.left) {
-        this.position = position
+        this.position = position;
       }
     },
     handleInput (event) {
-      this.userInput = event.target.value
+      this.userInput = event.target.value;
     },
     handleChange (event) {
-      const value = event.target.value
+      const value = event.target.value;
       if (this.editable && this.userInput !== null) {
-        const calendar = this.$children[0]
-        const checkDate = calendar.isDisabledTime
+        const calendar = this.$children[0];
+        const checkDate = calendar.isDisabledTime;
         if (this.range) {
           const range = value.split(` ${this.rangeSeparator} `)
           if (range.length === 2) {
-            const start = this.parseDate(range[0], this.format)
-            const end = this.parseDate(range[1], this.format)
+            const start = this.parseDate(range[0], this.format);
+            const end = this.parseDate(range[1], this.format);
             if (start && end && !checkDate(start, null, end) && !checkDate(end, start, null)) {
-              this.currentValue = [ start, end ]
-              this.updateDate(true)
-              this.closePopup()
-              return
+              this.currentValue = [ start, end ];
+              this.updateDate(true);
+              this.closePopup();
+              return;
             }
           }
         } else {

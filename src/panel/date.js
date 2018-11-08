@@ -11,13 +11,13 @@ export default {
     endAt: null,
     dateFormat: {
       type: String,
-      default: 'YYYY-MM-DD'
+      default: 'yyyy-MM-dd'
     },
     calendarMonth: {
-      default: DateTime.utc().month,
+      default: DateTime.utc().month
     },
     calendarYear: {
-      default: DateTime.utc().year,
+      default: DateTime.utc().year
     },
     firstDayOfWeek: {
       default: 7,
@@ -46,25 +46,25 @@ export default {
     },
     getDates (year, month, firstDayOfWeek) {
       const arr = []
-      const time = DateTime.utc(year, month)
+      let time = DateTime.utc(year, month)
 
-      time.set({ day: 1 }) // 把时间切换到上个月最后一天
+      time = time.set({ day: 0 }) // 把时间切换到上个月最后一天
       const lastMonthLength = (time.weekday + 7 - firstDayOfWeek) % 7 + 1 // time.weekday 0是星期天, 1是星期一 ...
       const lastMonthfirst = time.day - (lastMonthLength - 1)
       for (let i = 0; i < lastMonthLength; i++) {
-        arr.push({ year, month: month - 1, day: lastMonthfirst + i })
+        arr.push({ year: time.year, month: time.month, day: lastMonthfirst + i })
       }
 
-      time.set({ month: time.month + 2, day: 1 }) // 切换到这个月最后一天
+      time = time.set({ month: month + 1, day: 0 }) // 切换到这个月最后一天
       const curMonthLength = time.day
       for (let i = 0; i < curMonthLength; i++) {
-        arr.push({ year, month, day: 1 + i })
+        arr.push({ year: time.year, month: time.month, day: 1 + i })
       }
 
-      time.set({ month: time.month + 1, day: 1 }) // 切换到下个月第一天
-      const nextMonthLength = 42 - (lastMonthLength + curMonthLength)
+      time = time.set({ month: month, day: 1 }).plus({month: 2}).set({ day: 0 }) // 切换到下个月第一天
+      const nextMonthLength = (7 * 6) - (lastMonthLength + curMonthLength) // 7 days * 6 rows
       for (let i = 0; i < nextMonthLength; i++) {
-        arr.push({ year, month: month + 1, day: 1 + i })
+        arr.push({ year: time.year, month: time.month, day: 1 + i })
       }
 
       return arr
@@ -85,7 +85,7 @@ export default {
         classes.push('cur-month')
       }
 
-      if (cellTime === today) {
+      if (cellTime.hasSame(today, 'day')) {
         classes.push('today')
       }
 
@@ -94,7 +94,7 @@ export default {
       }
 
       if (curTime) {
-        if (cellTime === curTime) {
+        if (cellTime.hasSame(curTime, 'day')) {
           classes.push('actived')
         } else if (startTime && cellTime <= curTime) {
           classes.push('inrange')
