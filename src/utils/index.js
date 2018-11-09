@@ -63,7 +63,7 @@ export function formatDate (date, format) {
 
 export function parseDate (value, format) {
   try {
-    return DateTime.fromFormat(value, format)
+    return DateTime.fromFormat(value, format, { zone: 'utc' })
   } catch (e) {
     return false
   }

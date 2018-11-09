@@ -342,6 +342,9 @@ export default {
     changeCalendarMonth (month) {
       this.updateNow(DateTime.utc(this.calendarYear, month))
     },
+    offsetCalendarMonth (amount) {
+      this.updateNow(DateTime.utc(this.calendarYear, this.calendarMonth).plus({ month: amount }))
+    },
     getSibling () {
       const calendars = this.$parent.$children.filter(v => v.$options.name === this.$options.name)
       const index = calendars.indexOf(this)
@@ -350,7 +353,7 @@ export default {
     },
     handleIconMonth (flag) {
       const month = this.calendarMonth
-      this.changeCalendarMonth(month + flag)
+      this.offsetCalendarMonth(flag)
       this.$parent.$emit('change-calendar-month', {
         month,
         flag,
