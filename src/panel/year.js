@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon'
-
 export default {
   name: 'panelYear',
   props: {
@@ -24,7 +22,7 @@ export default {
   render (h) {
     // 当前年代
     const firstYear = Math.floor(this.firstYear / 10) * 10
-    const currentYear = this.value && DateTime.utc().year
+    const currentYear = this.value && this.value.year
     const years = Array.apply(null, { length: 10 }).map((_, i) => {
       const year = firstYear + i
       return <span

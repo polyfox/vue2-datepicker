@@ -274,8 +274,8 @@ export default {
       return false
     },
     isDisabledYear (year) {
-      const time = DateTime.utc(year, 0)
-      const maxTime = DateTime.utc(year + 1, 0).minus({second: 1})
+      const time = DateTime.utc(year, 1)
+      const maxTime = DateTime.utc(year + 1, 1).minus({second: 1})
       return this.inBefore(maxTime) || this.inAfter(time) || (this.type === 'year' && this.inDisabledDays(time))
     },
     isDisabledMonth (month) {
