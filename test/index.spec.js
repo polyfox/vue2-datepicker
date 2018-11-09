@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import { DateTime } from 'luxon'
 import { mount, shallowMount } from '@vue/test-utils'
 import DatePicker from '../src/index.vue'
 import CalendarPanel from '../src/calendar.vue'
@@ -26,7 +27,7 @@ describe('datepicker', () => {
   it('click: pick date', () => {
     wrapper = mount(DatePicker, {
       propsData: {
-        value: new Date(2018, 4, 2)
+        value: DateTime.utc(2018, 5, 2)
       }
     })
     // 2018-05-03
@@ -35,11 +36,11 @@ describe('datepicker', () => {
     let td = wrapper.find('.mx-panel-date td:nth-child(5)')
     expect(td.classes()).not.toContain('actived')
     expect(vm.text).toBe('2018-05-02')
-    const time = new Date(2018, 4, 3).getTime()
+    const time = DateTime.utc(2018, 5, 3)
     td.trigger('click')
     const emitted = wrapper.emitted()
-    expect(emitted.input[0][0].getTime()).toBe(time)
-    expect(emitted.change[0][0].getTime()).toBe(time)
+    expect(emitted.input[0][0].hasSame(time, 'second')).toBe(true)
+    expect(emitted.change[0][0].hasSame(time, 'second')).toBe(true)
     wrapper.setProps({ value: emitted.input[0][0] })
     td = wrapper.find('.mx-panel-date td:nth-child(5)')
     expect(td.classes()).toContain('actived')
@@ -49,7 +50,7 @@ describe('datepicker', () => {
   it('click: clear icon', () => {
     wrapper = shallowMount(DatePicker, {
       propsData: {
-        value: new Date(2018, 4, 2)
+        value: DateTime.utc(2018, 5, 2)
       }
     })
     const vm = wrapper.vm
@@ -86,18 +87,20 @@ describe('datepicker', () => {
       expect(td2.at(13).classes()).toContain('disabled')
       expect(td2.at(14).classes()).not.toContain('disabled')
 
-      const date1 = new Date(td1.at(14).element.title).setHours(0, 0, 0, 0)
+      const date1 = DateTime.fromISO(td1.at(14).element.title, { zone: 'utc' }).set({hour: 0, minute: 0, second: 0, millisecond: 0})
+      expect(date1.zoneName).toBe('UTC')
       td2.at(16).trigger('click')
       Vue.nextTick(() => {
         const emitted = wrapper.emitted()
-        const date2 = new Date(td2.at(16).element.title).setHours(0, 0, 0, 0)
+        const date2 = DateTime.fromISO(td1.at(16).element.title, { zone: 'utc' }).set({hour: 0, minute: 0, second: 0, millisecond: 0})
+        expect(date2.zoneName).toBe('UTC')
 
         expect(td2.at(16).classes()).toContain('actived')
         expect(td1.at(15).classes()).toContain('inrange')
         expect(td1.at(16).classes()).toContain('inrange')
         expect(td1.at(17).classes()).toContain('disabled')
         expect(emitted.input).toHaveLength(1)
-        expect(emitted.input[0][0]).toEqual([new Date(date1), new Date(date2)])
+        expect(emitted.input[0][0]).toEqual([date1, date2])
         done()
       })
     })
@@ -107,7 +110,7 @@ describe('datepicker', () => {
     wrapper = shallowMount(DatePicker, {
       propsData: {
         range: true,
-        value: [new Date('2018-06-01'), new Date('2018-06-10')],
+        value: [DateTime.utc(2018, 6, 1), DateTime.utc(2018, 6, 10)],
         rangeSeparator: '至'
       }
     })
@@ -126,7 +129,7 @@ describe('datepicker', () => {
     expect(btn.exists()).toBe(true)
     // click the date expect popup don't close
     wrapper.setData({ popupVisible: true })
-    vm.selectDate(new Date(2018, 5, 5))
+    vm.selectDate(DateTime.utc(2018, 6, 5))
     expect(vm.popupVisible).toBe(true)
     expect(wrapper.emittedByOrder()).toHaveLength(0)
     btn.trigger('click')
@@ -163,7 +166,7 @@ describe('datepicker', () => {
     wrapper = shallowMount(DatePicker, {
       propsData: {
         disabled: true,
-        value: new Date(2018, 4, 5),
+        value: DateTime.utc(2018, 5, 5),
         clearable: true
       }
     })
@@ -178,7 +181,7 @@ describe('datepicker', () => {
   it('prop: input attribte - inputName inputClass placeholder', () => {
     wrapper = shallowMount(DatePicker, {
       propsData: {
-        value: new Date(2018, 4, 5),
+        value: DateTime.utc(2018, 5, 5),
         inputName: 'datepicker',
         inputClass: ['mx-input', 'mx-my'],
         placeholder: 'hehe'
@@ -195,7 +198,7 @@ describe('datepicker', () => {
     wrapper = mount(DatePicker, {
       propsData: {
         lang: 'en',
-        value: new Date(2018, 5, 5)
+        value: DateTime.utc(2018, 6, 5)
       }
     })
     const el = wrapper.find('.mx-current-month')
@@ -207,7 +210,7 @@ describe('datepicker', () => {
   })
 
   it('prop: shortcuts', () => {
-    const today = new Date()
+    const today = DateTime.utc()
     wrapper = shallowMount(DatePicker, {
       propsData: {
         shortcuts: [
@@ -238,7 +241,7 @@ describe('datepicker', () => {
   it('type input should be right', (done) => {
     wrapper = mount(DatePicker, {
       propsData: {
-        format: 'YYYY-MM-DD'
+        format: 'yyyy-MM-dd'
       },
       sync: false
     })
@@ -246,7 +249,7 @@ describe('datepicker', () => {
     input.setValue('2018-09-10')
     input.trigger('input')
     input.trigger('change')
-    const expectDate = new Date(2018, 8, 10)
+    const expectDate = DateTime.utc(2018, 9, 10)
     wrapper.setProps({
       range: true
     })
@@ -254,12 +257,14 @@ describe('datepicker', () => {
       input.setValue('2018-09-10 ~ 2018-09-11')
       input.trigger('input')
       input.trigger('change')
-      const expectRange = [new Date(2018, 8, 10), new Date(2018, 8, 11)]
+      const expectRange = [DateTime.utc(2018, 9, 10), DateTime.utc(2018, 9, 11)]
       input.setValue('2018-09-10 ~ 2018-08-10')
       input.trigger('input')
       input.trigger('change')
       const emitted = wrapper.emitted()
-      expect(emitted.input).toEqual([[expectDate], [expectRange]])
+      expect(emitted.input[0][0].hasSame(expectDate, 'day')).toBe(true)
+      expect(emitted.input[1][0].hasSame(expectRange[0], 'day')).toBe(true)
+      expect(emitted.input[1][1].hasSame(expectRange[1], 'day')).toBe(true)
       expect(emitted['input-error']).toEqual([['2018-09-10 ~ 2018-08-10']])
       done()
     })
@@ -268,8 +273,8 @@ describe('datepicker', () => {
   it('prop: dateFormat', () => {
     wrapper = mount(DatePicker, {
       propsData: {
-        value: new Date('2018-08-08'),
-        format: '[on] MM-DD-YYYY [at] HH:mm',
+        value: DateTime.utc(2018, 8, 8),
+        format: '[on] MM-dd-yyyy [at] HH:mm',
         type: 'datetime'
       }
     })
@@ -279,7 +284,7 @@ describe('datepicker', () => {
     expect(cell.element.title).toBe(ss)
     expect(timeHeader.text()).toBe(ss)
     wrapper.setProps({
-      dateFormat: 'YYYY-MM-DD'
+      dateFormat: 'yyyy-MM-dd'
     })
     ss = '2018-08-08'
     expect(cell.element.title).toBe(ss)
@@ -301,8 +306,8 @@ describe('calendar-panel', () => {
       nextBtn.trigger('click')
       const newYear = vm.calendarYear
       const newMonth = vm.calendarMonth
-      if (oldMonth === 11) {
-        expect(newMonth).toBe(0)
+      if (oldMonth === 12) {
+        expect(newMonth).toBe(1)
         expect(newYear).toBe(oldYear + 1)
       } else {
         expect(newMonth).toBe(oldMonth + 1)
@@ -316,8 +321,8 @@ describe('calendar-panel', () => {
       lastBtn.trigger('click')
       const newYear = vm.calendarYear
       const newMonth = vm.calendarMonth
-      if (oldMonth === 0) {
-        expect(newMonth).toBe(11)
+      if (oldMonth === 1) {
+        expect(newMonth).toBe(12)
         expect(newYear).toBe(oldYear - 1)
       } else {
         expect(newMonth).toBe(oldMonth - 1)
@@ -328,7 +333,7 @@ describe('calendar-panel', () => {
 
   it('click: prev/next year', () => {
     wrapper = mount(CalendarPanel, {
-      value: new Date(2018, 4, 5)
+      value: DateTime.utc(2018, 5, 5)
     })
     const nextBtn = wrapper.find('.mx-icon-next-year')
     const lastBtn = wrapper.find('.mx-icon-last-year')
@@ -356,9 +361,9 @@ describe('calendar-panel', () => {
   it('prop: notBefore/notAfter', () => {
     wrapper = mount(CalendarPanel, {
       propsData: {
-        value: new Date(2018, 4, 2),
-        notBefore: new Date(2018, 4, 2, 12),
-        notAfter: new Date(2018, 4, 31, 12)
+        value: DateTime.utc(2018, 5, 2),
+        notBefore: DateTime.utc(2018, 5, 2, 12),
+        notAfter: DateTime.utc(2018, 5, 31, 12)
       }
     })
     const tds = wrapper.findAll('.mx-panel-date td')
@@ -394,29 +399,29 @@ describe('calendar-panel', () => {
   })
 
   it('prop: disabledDays(Array)', () => {
-    const disabledDays = ['2018-05-01', new Date(2018, 4, 3)]
+    const disabledDays = [DateTime.utc(2018, 5, 1), DateTime.utc(2018, 5, 3)]
     wrapper = mount(CalendarPanel, {
       propsData: {
-        value: new Date(2018, 4, 2),
+        value: DateTime.utc(2018, 5, 2),
         disabledDays
       }
     })
     const tds = wrapper.findAll('.mx-panel-date td.disabled')
     expect(tds.length).toBe(disabledDays.length)
     for (let i = 0, len = tds.length; i < len; i++) {
-      const tdDate = new Date(tds.at(i).element.title).setHours(0, 0, 0, 0)
-      const expectDate = new Date(disabledDays[i]).setHours(0, 0, 0, 0)
-      expect(tdDate).toBe(expectDate)
+      const tdDate = DateTime.fromISO(tds.at(i).element.title, { zone: 'utc' }).set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+      const expectDate = disabledDays[i].set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+      expect(tdDate.hasSame(expectDate, 'second')).toBe(true)
     }
   })
 
   it('prop: disabledDays(Function)', () => {
     const disabledDays = function (date) {
-      return date < new Date(2018, 4, 1) || date > new Date(2018, 4, 31)
+      return date < DateTime.utc(2018, 5, 1) || date > DateTime.utc(2018, 5, 31)
     }
     wrapper = mount(CalendarPanel, {
       propsData: {
-        value: new Date(2018, 4, 4),
+        value: DateTime.utc(2018, 5, 4),
         disabledDays
       }
     })
@@ -435,7 +440,7 @@ describe('calendar-panel', () => {
   it('feat: when the time panel show, scroll to the right position', (done) => {
     wrapper = mount(CalendarPanel, {
       propsData: {
-        value: new Date(2018, 4, 4),
+        value: DateTime.utc(2018, 5, 4),
         type: 'datetime'
       }
     })
@@ -460,12 +465,12 @@ describe('calendar-panel', () => {
     wrapper = mount(CalendarPanel, {
       propsData: {
         type: 'year',
-        value: new Date(2018, 1, 1)
+        value: DateTime.utc(2018, 2, 1)
       }
     })
     const td = wrapper.find('.mx-panel-year .cell:nth-child(1)')
     td.trigger('click')
-    const expectDate = new Date(2010, 1, 1)
+    const expectDate = DateTime.utc(2010, 2, 1)
     expect(wrapper.emitted()).toEqual({
       'select-date': [[expectDate]]
     })
@@ -475,12 +480,12 @@ describe('calendar-panel', () => {
     wrapper = mount(CalendarPanel, {
       propsData: {
         type: 'month',
-        value: new Date(2018, 1, 1)
+        value: DateTime.utc(2018, 2, 1)
       }
     })
     const td = wrapper.find('.mx-panel-month .cell:nth-child(1)')
     td.trigger('click')
-    const expectDate = new Date(2018, 0, 1)
+    const expectDate = DateTime.utc(2018, 1, 1)
     expect(wrapper.emitted()).toEqual({
       'select-date': [[expectDate]]
     })
@@ -491,15 +496,15 @@ describe('date-panel', () => {
   const testRenderCalendar = (i) => it(`feat: render the corrent date panel firstDayOfWeek: ${i}`, () => {
     wrapper = mount(DatePanel, {
       propsData: {
-        value: new Date(2018, 4, 1),
-        calendarMonth: 4,
+        value: DateTime.utc(2018, 5, 1),
+        calendarMonth: 5,
         calendarYear: 2018,
         firstDayOfWeek: i
       }
     })
-    const lastMonth = new Date(2018, 3, 30)
-    const lastMonthDay = 30
-    const lastMonthLength = (lastMonth.getDay() + 7 - i) % 7 + 1
+    const lastMonth = DateTime.utc(2018, 4, 30)
+    const lastMonthDay = lastMonth.day
+    const lastMonthLength = (lastMonth.weekday + 7 - i) % 7 + 1
     const currentMonthLength = 31
     const tds = wrapper.findAll('.mx-panel-date td')
     for (let i = 0; i < 42; i++) {
@@ -534,7 +539,7 @@ describe('year-panel', () => {
   it('feat: render the corrent year panel', () => {
     wrapper = mount(YearPanel, {
       propsData: {
-        value: new Date(2018, 4, 1),
+        value: DateTime.utc(2018, 5, 1),
         firstYear: 2010
       }
     })
@@ -562,7 +567,7 @@ describe('time-panel', () => {
   it('click: pick time emitted the select event', () => {
     wrapper = mount(TimePanel, {
       propsData: {
-        value: new Date(2018, 5, 5)
+        value: DateTime.utc(2018, 6, 5)
       }
     })
     const list = wrapper.findAll('.mx-time-list')
@@ -579,14 +584,14 @@ describe('time-panel', () => {
     minutes.at(1).trigger('click')
     seconds.at(1).trigger('click')
     expect(wrapper.emitted()).toEqual({
-      select: [[new Date(2018, 5, 5, 1)], [new Date(2018, 5, 5, 0, 1)], [new Date(2018, 5, 5, 0, 0, 1)]]
+      select: [[DateTime.utc(2018, 6, 5, 1)], [DateTime.utc(2018, 6, 5, 0, 1)], [DateTime.utc(2018, 6, 5, 0, 0, 1)]]
     })
   })
 
   it('prop: minuteStep', () => {
     wrapper = mount(TimePanel, {
       propsData: {
-        value: new Date(2018, 5, 5),
+        value: DateTime.utc(2018, 6, 5),
         minuteStep: 30
       }
     })
@@ -601,7 +606,7 @@ describe('time-panel', () => {
   it('prop: timePickerOptions', () => {
     wrapper = mount(TimePanel, {
       propsData: {
-        value: new Date(2018, 5, 5),
+        value: DateTime.utc(2018, 6, 5),
         timePickerOptions: { start: '01:00', step: '00:30', end: '23:00' }
       }
     })
@@ -614,7 +619,7 @@ describe('time-panel', () => {
     cells.at(0).trigger('click')
     const emitted = wrapper.emitted()
     expect(emitted).toEqual({
-      pick: [[new Date(2018, 5, 5, 1)]]
+      pick: [[DateTime.utc(2018, 6, 5, 1)]]
     })
   })
 })

@@ -14,10 +14,13 @@ export default {
       default: 'yyyy-MM-dd'
     },
     calendarMonth: {
-      default: DateTime.utc().month
+      default: DateTime.utc().month,
+      type: Number,
+      validator: val => val >= 1 && val <= 12
     },
     calendarYear: {
-      default: DateTime.utc().year
+      default: DateTime.utc().year,
+      type: Number
     },
     firstDayOfWeek: {
       default: 7,
